@@ -17,7 +17,11 @@ export const AIAgentComponents = ({
   showDialog,
   onCloseDialog,
 }: AIAgentComponentsProps) => {
-  const handleCreateAgent = (agent: any) => {
+  const handleCreateAgent = (agent: {
+    id: string;
+    name: string;
+    workingDir: string;
+  }) => {
     const elements = excalidrawAPI.getSceneElements();
     const lastElement = elements[elements.length - 1];
 
@@ -31,14 +35,15 @@ export const AIAgentComponents = ({
       type: "embeddable",
       x: 100,
       y: 100,
-      width: 220,
-      height: 90,
+      width: 300,
+      height: 120,
       index: newIndex,
-      link: `${window.location.origin}/api/${agent.id}/view`,
+      link: `${window.location.origin}/api/claude/${agent.id}/launch`,
       customData: {
         nodeType: "ai-agent",
         agentId: agent.id,
         name: agent.name,
+        workingDir: agent.workingDir,
       },
     } as any);
 

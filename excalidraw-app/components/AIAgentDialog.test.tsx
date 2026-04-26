@@ -1,10 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
+
 import AIAgentDialog from "./AIAgentDialog";
 
 // Mock fetch globally
 global.fetch = vi.fn();
+
+// Mock crypto.randomUUID
+const mockRandomUUID = vi.fn(() => "0ce062db-8ef0-4d98-930d-04389b6c81fa");
+Object.defineProperty(global, "crypto", {
+  value: {
+    randomUUID: mockRandomUUID,
+  },
+  writable: true,
+});
 
 describe("AIAgentDialog", () => {
   const mockOnConfirm = vi.fn();
@@ -42,7 +52,7 @@ describe("AIAgentDialog", () => {
     render(<AIAgentDialog onConfirm={mockOnConfirm} onCancel={mockOnCancel} />);
 
     const dirInput = screen.getByLabelText(
-      "Working Directory"
+      "Working Directory",
     ) as HTMLInputElement;
     fireEvent.change(dirInput, { target: { value: "/custom/path" } });
 
@@ -69,7 +79,7 @@ describe("AIAgentDialog", () => {
     render(<AIAgentDialog onConfirm={mockOnConfirm} onCancel={mockOnCancel} />);
 
     const dirInput = screen.getByLabelText(
-      "Working Directory"
+      "Working Directory",
     ) as HTMLInputElement;
     fireEvent.change(dirInput, { target: { value: "" } });
 
@@ -94,24 +104,19 @@ describe("AIAgentDialog", () => {
   });
 
   it("should create agent and call onConfirm on success", async () => {
-    const mockAgent = {
-      id: "test-123",
-      name: "Test Agent",
-      sessionName: "excalidraw-test",
-      workingDir: "/home/user",
-      createdAt: new Date().toISOString(),
-    };
-
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockAgent,
+      json: async () => ({
+        id: "0ce062db-8ef0-4d98-930d-04389b6c81fa",
+        createdAt: new Date().toISOString(),
+      }),
     });
 
     render(<AIAgentDialog onConfirm={mockOnConfirm} onCancel={mockOnCancel} />);
 
     const nameInput = screen.getByLabelText("Agent Name") as HTMLInputElement;
     const dirInput = screen.getByLabelText(
-      "Working Directory"
+      "Working Directory",
     ) as HTMLInputElement;
 
     fireEvent.change(nameInput, { target: { value: "Test Agent" } });
@@ -121,20 +126,40 @@ describe("AIAgentDialog", () => {
     fireEvent.click(createButton);
 
     await waitFor(() => {
-      expect(mockOnConfirm).toHaveBeenCalledWith(mockAgent);
+      expect(mockOnConfirm).toHaveBeenCalledWith({
+        id: "0ce062db-8ef0-4d98-930d-04389b6c81fa",
+        name: "Test Agent",
+        workingDir: "/home/user",
+      });
     });
 
     expect(global.fetch).toHaveBeenCalledWith(
-      "/api/agents",
+      "/api/claude/0ce062db-8ef0-4d98-930d-04389b6c81fa",
       expect.objectContaining({
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: "Test Agent",
-          workingDir: "/home/user",
-        }),
-      })
+        body: JSON.stringify({ workingDir: "/home/user" }),
+      }),
     );
+  });
+
+  it("should generate UUID using crypto.randomUUID", async () => {
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: "0ce062db-8ef0-4d98-930d-04389b6c81fa",
+        createdAt: new Date().toISOString(),
+      }),
+    });
+
+    render(<AIAgentDialog onConfirm={mockOnConfirm} onCancel={mockOnCancel} />);
+
+    const createButton = screen.getByText("Create Node");
+    fireEvent.click(createButton);
+
+    await waitFor(() => {
+      expect(mockRandomUUID).toHaveBeenCalled();
+    });
   });
 
   it("should show error when API request fails", async () => {
@@ -155,9 +180,7 @@ describe("AIAgentDialog", () => {
   });
 
   it("should show error when network error occurs", async () => {
-    (global.fetch as any).mockRejectedValueOnce(
-      new Error("Network error")
-    );
+    (global.fetch as any).mockRejectedValueOnce(new Error("Network error"));
 
     render(<AIAgentDialog onConfirm={mockOnConfirm} onCancel={mockOnCancel} />);
 
@@ -175,8 +198,11 @@ describe("AIAgentDialog", () => {
     (global.fetch as any).mockImplementationOnce(
       () =>
         new Promise((resolve) =>
-          setTimeout(() => resolve({ ok: true, json: async () => ({}) }), 100)
-        )
+          setTimeout(
+            () => resolve({ ok: true, json: async () => ({ id: "test" }) }),
+            100,
+          ),
+        ),
     );
 
     render(<AIAgentDialog onConfirm={mockOnConfirm} onCancel={mockOnCancel} />);
@@ -194,41 +220,14 @@ describe("AIAgentDialog", () => {
     expect(cancelButton.disabled).toBe(true);
   });
 
-  it("should trim whitespace from inputs", async () => {
-    const mockAgent = {
-      id: "test-456",
-      name: "Trimmed Agent",
-      sessionName: "excalidraw-trim",
-      workingDir: "/home/trim",
-      createdAt: new Date().toISOString(),
-    };
-
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockAgent,
-    });
-
-    render(<AIAgentDialog onConfirm={mockOnConfirm} onCancel={mockOnCancel} />);
-
-    const nameInput = screen.getByLabelText("Agent Name") as HTMLInputElement;
-    fireEvent.change(nameInput, { target: { value: "  Trimmed Agent  " } });
-
-    const createButton = screen.getByText("Create Node");
-    fireEvent.click(createButton);
-
-    await waitFor(() => {
-      expect(mockOnConfirm).toHaveBeenCalled();
-    });
-  });
-
   it("should display correct placeholder text", () => {
     render(<AIAgentDialog onConfirm={mockOnConfirm} onCancel={mockOnCancel} />);
 
     const nameInput = screen.getByPlaceholderText(
-      "e.g., Claude Code"
+      "e.g., Claude Code",
     ) as HTMLInputElement;
     const dirInput = screen.getByPlaceholderText(
-      "/path/to/project"
+      "/path/to/project",
     ) as HTMLInputElement;
 
     expect(nameInput).toBeDefined();
@@ -240,26 +239,5 @@ describe("AIAgentDialog", () => {
 
     expect(screen.getByLabelText("Agent Name")).toBeDefined();
     expect(screen.getByLabelText("Working Directory")).toBeDefined();
-  });
-
-  it("should clear error when user starts typing after error", async () => {
-    render(<AIAgentDialog onConfirm={mockOnConfirm} onCancel={mockOnCancel} />);
-
-    const nameInput = screen.getByLabelText("Agent Name") as HTMLInputElement;
-    fireEvent.change(nameInput, { target: { value: "" } });
-
-    const createButton = screen.getByText("Create Node");
-    fireEvent.click(createButton);
-
-    await waitFor(() => {
-      expect(screen.getByText("Agent name is required")).toBeDefined();
-    });
-
-    fireEvent.change(nameInput, { target: { value: "New Agent" } });
-    fireEvent.click(createButton);
-
-    await waitFor(() => {
-      expect(screen.queryByText("Agent name is required")).toBeNull();
-    });
   });
 });

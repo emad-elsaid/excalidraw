@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import React from "react";
-import { AIAgentComponents } from "./AIAgentComponents";
+
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
+
+import { AIAgentComponents } from "./AIAgentComponents";
 
 // Mock AIAgentDialog
 vi.mock("./AIAgentDialog", () => ({
@@ -32,7 +34,7 @@ describe("AIAgentComponents", () => {
         excalidrawAPI={mockAPI as ExcalidrawImperativeAPI}
         showDialog={false}
         onCloseDialog={() => {}}
-      />
+      />,
     );
 
     expect(screen.queryByTestId("mock-dialog")).toBeNull();
@@ -44,7 +46,7 @@ describe("AIAgentComponents", () => {
         excalidrawAPI={mockAPI as ExcalidrawImperativeAPI}
         showDialog={true}
         onCloseDialog={() => {}}
-      />
+      />,
     );
 
     expect(screen.getByTestId("mock-dialog")).toBeDefined();
@@ -59,7 +61,7 @@ describe("AIAgentComponents", () => {
         excalidrawAPI={mockAPI as ExcalidrawImperativeAPI}
         showDialog={true}
         onCloseDialog={() => {}}
-      />
+      />,
     );
 
     const confirmButton = screen.getByText("Confirm");
@@ -77,7 +79,7 @@ describe("AIAgentComponents", () => {
             }),
           }),
         ]),
-      })
+      }),
     );
   });
 
@@ -90,7 +92,7 @@ describe("AIAgentComponents", () => {
         excalidrawAPI={mockAPI as ExcalidrawImperativeAPI}
         showDialog={true}
         onCloseDialog={() => {}}
-      />
+      />,
     );
 
     const confirmButton = screen.getByText("Confirm");
@@ -104,11 +106,11 @@ describe("AIAgentComponents", () => {
             y: 100,
           }),
         ]),
-      })
+      }),
     );
   });
 
-  it("should set element dimensions to 220x90", () => {
+  it("should set element dimensions to 300x120", () => {
     const mockUpdateScene = vi.fn();
     mockAPI.updateScene = mockUpdateScene;
 
@@ -117,7 +119,7 @@ describe("AIAgentComponents", () => {
         excalidrawAPI={mockAPI as ExcalidrawImperativeAPI}
         showDialog={true}
         onCloseDialog={() => {}}
-      />
+      />,
     );
 
     const confirmButton = screen.getByText("Confirm");
@@ -127,11 +129,11 @@ describe("AIAgentComponents", () => {
       expect.objectContaining({
         elements: expect.arrayContaining([
           expect.objectContaining({
-            width: 220,
-            height: 90,
+            width: 300,
+            height: 120,
           }),
         ]),
-      })
+      }),
     );
   });
 
@@ -139,19 +141,12 @@ describe("AIAgentComponents", () => {
     const mockUpdateScene = vi.fn();
     mockAPI.updateScene = mockUpdateScene;
 
-    const agent = {
-      id: "agent-456",
-      name: "View Test",
-      sessionName: "excalidraw-view",
-      workingDir: "/home",
-    };
-
     render(
       <AIAgentComponents
         excalidrawAPI={mockAPI as ExcalidrawImperativeAPI}
         showDialog={true}
         onCloseDialog={() => {}}
-      />
+      />,
     );
 
     expect(screen.getByTestId("mock-dialog")).toBeDefined();
@@ -165,7 +160,7 @@ describe("AIAgentComponents", () => {
         excalidrawAPI={mockAPI as ExcalidrawImperativeAPI}
         showDialog={true}
         onCloseDialog={mockOnClose}
-      />
+      />,
     );
 
     const confirmButton = screen.getByText("Confirm");
@@ -182,7 +177,7 @@ describe("AIAgentComponents", () => {
         excalidrawAPI={mockAPI as ExcalidrawImperativeAPI}
         showDialog={true}
         onCloseDialog={mockOnClose}
-      />
+      />,
     );
 
     const cancelButton = screen.getByText("Cancel");
@@ -206,7 +201,7 @@ describe("AIAgentComponents", () => {
         excalidrawAPI={mockAPI as ExcalidrawImperativeAPI}
         showDialog={true}
         onCloseDialog={() => {}}
-      />
+      />,
     );
 
     const confirmButton = screen.getByText("Confirm");
@@ -221,7 +216,7 @@ describe("AIAgentComponents", () => {
             type: "embeddable",
           }),
         ]),
-      })
+      }),
     );
 
     const updateCall = mockUpdateScene.mock.calls[0][0];
@@ -243,7 +238,7 @@ describe("AIAgentComponents", () => {
         excalidrawAPI={mockAPI as ExcalidrawImperativeAPI}
         showDialog={true}
         onCloseDialog={() => {}}
-      />
+      />,
     );
 
     const confirmButton = screen.getByText("Confirm");
@@ -265,7 +260,7 @@ describe("AIAgentComponents", () => {
         excalidrawAPI={mockAPI as ExcalidrawImperativeAPI}
         showDialog={true}
         onCloseDialog={() => {}}
-      />
+      />,
     );
 
     const confirmButton = screen.getByText("Confirm");

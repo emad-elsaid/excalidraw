@@ -8,9 +8,9 @@ interface AIAgentNodeProps {
 
 const AIAgentNode: React.FC<AIAgentNodeProps> = ({ element }) => {
   const [status, setStatus] = useState<"running" | "terminated">("terminated");
-  const [ttydPort, setTtydPort] = useState<number | null>(null);
   const agentId = element.customData?.agentId;
   const agentName = element.customData?.name || "Agent";
+  const workingDir = element.customData?.workingDir || "~";
 
   useEffect(() => {
     if (!agentId) {
@@ -19,7 +19,7 @@ const AIAgentNode: React.FC<AIAgentNodeProps> = ({ element }) => {
 
     const fetchStatus = async () => {
       try {
-        const res = await fetch(`${API_BASE}/agents/${agentId}/status`);
+        const res = await fetch(`${API_BASE}/claude/${agentId}`);
         if (res.ok) {
           const data = await res.json();
           setStatus(data.status);
@@ -29,24 +29,37 @@ const AIAgentNode: React.FC<AIAgentNodeProps> = ({ element }) => {
       }
     };
 
-    // Get ttyd port and ensure it's running
-    const initTtyd = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/agents/${agentId}/port`);
-        if (res.ok) {
-          const data = await res.json();
-          setTtydPort(data.port);
-        }
-      } catch (err) {
-        console.error("Failed to get ttyd port:", err);
-      }
-    };
-
-    initTtyd();
     fetchStatus();
     const interval = setInterval(fetchStatus, 3000);
     return () => clearInterval(interval);
   }, [agentId]);
+
+  const handleTerminate = async () => {
+    if (!agentId) {
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/claude/${agentId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setStatus("terminated");
+      }
+    } catch (err) {
+      console.error("Failed to terminate agent:", err);
+    }
+  };
+
+  const handleLaunch = async () => {
+    if (!agentId) {
+      return;
+    }
+    try {
+      await fetch(`${API_BASE}/claude/${agentId}/launch`);
+    } catch (err) {
+      console.error("Failed to launch terminal:", err);
+    }
+  };
 
   if (!agentId) {
     return (
@@ -60,28 +73,10 @@ const AIAgentNode: React.FC<AIAgentNodeProps> = ({ element }) => {
           alignItems: "center",
           justifyContent: "center",
           color: "#999",
+          fontSize: "12px",
         }}
       >
         Invalid Agent
-      </div>
-    );
-  }
-
-  if (!ttydPort) {
-    return (
-      <div
-        style={{
-          padding: "8px",
-          width: "100%",
-          height: "100%",
-          boxSizing: "border-box",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#999",
-        }}
-      >
-        Loading terminal...
       </div>
     );
   }
@@ -95,34 +90,81 @@ const AIAgentNode: React.FC<AIAgentNodeProps> = ({ element }) => {
         display: "flex",
         flexDirection: "column",
         backgroundColor: "#1e1e1e",
+        color: "#cccccc",
+        fontSize: "12px",
+        fontFamily: "monospace",
       }}
     >
+      {/* Header with name and status */}
       <div
         style={{
-          padding: "4px 8px",
+          padding: "6px 8px",
           backgroundColor: "#2d2d30",
-          color: "#cccccc",
-          fontSize: "12px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           borderBottom: "1px solid #3e3e42",
         }}
       >
-        <span>{agentName}</span>
-        <span>{status === "running" ? "🟢" : "🔴"}</span>
+        <span style={{ fontWeight: 500 }}>{agentName}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <span>{status === "running" ? "🟢" : "🔴"}</span>
+          {status === "running" && (
+            <button
+              onClick={handleTerminate}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#dc2626",
+                cursor: "pointer",
+                fontSize: "16px",
+                padding: 0,
+                lineHeight: 1,
+              }}
+              title="Terminate session"
+            >
+              ×
+            </button>
+          )}
+        </div>
       </div>
-      <iframe
-        src={`http://localhost:${ttydPort}`}
+
+      {/* Body with details */}
+      <div
         style={{
+          padding: "8px",
           flex: 1,
-          border: "none",
-          width: "100%",
-          backgroundColor: "#000",
+          display: "flex",
+          flexDirection: "column",
+          gap: "4px",
         }}
-        allow="clipboard-read; clipboard-write"
-        title={`Terminal: ${agentName}`}
-      />
+      >
+        <div>
+          <span style={{ color: "#888" }}>Directory:</span>{" "}
+          <span style={{ color: "#e5e7eb" }}>{workingDir}</span>
+        </div>
+        <div>
+          <span style={{ color: "#888" }}>UUID:</span>{" "}
+          <span style={{ color: "#e5e7eb", fontSize: "10px" }}>{agentId}</span>
+        </div>
+        <div style={{ marginTop: "8px" }}>
+          <button
+            onClick={handleLaunch}
+            style={{
+              padding: "4px 8px",
+              backgroundColor: "#3b82f6",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "11px",
+              fontFamily: "system-ui",
+            }}
+          >
+            Open in Kitty
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -40,18 +40,20 @@ The AI Agent component allows users to create and manage Claude Code instances d
 ### Backend Stack
 
 1. **Vite Plugin** (`agent-server.ts`)
+
    - Middleware that handles `/api` routes
    - `POST /api/claude/uuid` create a new claude code agent with `uuid` as the session uuid using `claude --session-id=<uuid>` where `uuid` is valid UUID inside tmux session with the same UUID.
    - `GET /api/claude/uuid` returns the status of the session (either running or terminated) using uuid of the tmux session ID
    - `DEL /api/claude/uuid` terminates a running claude session by uuid
    - `GET /api/claude/uuid/launch` runs kitty showing the tmux session that include the claude session with uuid.
 
-3. **tmux** (Terminal Multiplexer)
+2. **tmux** (Terminal Multiplexer)
+
    - Persistent terminal sessions
    - Session naming: `UUID`
    - tmux can create or attach to existing session using `tmux new -A -s <session_name>`
 
-4. **claude** (Claude Code CLI)
+3. **claude** (Claude Code CLI)
    - The actual AI coding assistant
    - Runs in the tmux session using same `UUID` used for tmux session
    - Working directory set per agent
@@ -59,16 +61,19 @@ The AI Agent component allows users to create and manage Claude Code instances d
 ### Frontend Stack
 
 1. **AIAgentDialog** (`AIAgentDialog.tsx`)
+
    - Modal for creating new agents
    - Inputs: Agent Name, Working Directory
    - Calls `POST /api/claude/uuid` to create agent
 
 2. **AIAgentComponents** (`AIAgentComponents.tsx`)
+
    - Integration layer between Excalidraw and agent components
    - Creates embeddable elements with agent metadata
    - Manages dialog visibility
 
 3. **AIAgentNode** (`AIAgentNode.tsx`)
+
    - Renders inside embeddable element
    - Displays status indicator, agent name, working directory, UUID of the session. button to terminate if it's running. button to open the kitty terminal calling `GET /api/claude/uuid/launch`
    - Polls status every 3 seconds
@@ -128,10 +133,12 @@ Every 3 seconds:
 
 ## API Endpoints
 
-### POST /api/agent/{uuid}
+### POST /api/claude/{uuid}
+
 Creates a new agent.
 
 **Request:**
+
 ```json
 {
   "uuid": "0ce062db-8ef0-4d98-930d-04389b6c81fa",
@@ -140,6 +147,7 @@ Creates a new agent.
 ```
 
 **Response:**
+
 ```json
 {
   "id": "0ce062db-8ef0-4d98-930d-04389b6c81fa",
@@ -148,43 +156,50 @@ Creates a new agent.
 ```
 
 **Validation:**
+
 - `uuid` is required (trimmed, non-empty)
-- `workingDir` defaults to `$HOME** if not provided
+- `workingDir` defaults to `$HOME\*\* if not provided
 
 **Behavior:**
-- Spawns: `tmux attach-session A -t {UUID} -c {workingDir} claude --session-id={UUID}`
+
+- Spawns: `tmux new -A -t {UUID} -c {workingDir} claude --session-id={UUID}`
 - Process is detached
 
+### GET /api/claude/{uuid}
 
-### GET /api/agent/{uuid}
 Returns the current status of an agent's tmux session.
 
 **Response:**
+
 ```json
 {
-  "status": "running",
+  "status": "running"
 }
 ```
 
 **Status Values:**
+
 - `"running"` - tmux session is active
 - `"terminated"` - tmux session does not exist
 
-### DELETE /api/agent/{uuid}
+### DELETE /api/claude/{uuid}
+
 Terminates the tmux session named `uuid`
 
 **Response:**
+
 ```json
 {
-  "status": "ok",
+  "status": "ok"
 }
 ```
 
+### Get /api/claude/{uuid}/launch
 
-### Get /api/agent/{uuid}/launch
 Opens the agent's terminal in external Kitty terminal that has tmux session with `uuid`
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -193,7 +208,8 @@ Opens the agent's terminal in external Kitty terminal that has tmux session with
 ```
 
 **Behavior:**
-- Spawns: `kitty tmux attach-session A -t {UUID}`
+
+- Spawns: `kitty tmux new -A -t {UUID}`
 - Process is detached
 
 ## Process Management
@@ -201,30 +217,34 @@ Opens the agent's terminal in external Kitty terminal that has tmux session with
 ### tmux Session Management
 
 **Session Naming:**
+
 - Format: `{uuid}`
 
 **Session Command:**
+
 ```bash
 tmux new-session -A -s {UUID} -c /home/user/project claude --session-id={UUID}
 ```
 
 **Flags:**
+
 - `-A` - Attach if exists, create if not
 - `-s` - Session name
 - `-c` - Start directory
 - Final arg: Command to run (`claude`)
 
 **Session Persistence:**
+
 - tmux sessions persist even if browser disconnects
 - Can reconnect to existing session
 - Session dies when Claude Code exits
-
 
 ## Visual Design
 
 ### AIAgentNode Appearance
 
 **Layout:**
+
 ```
 ┌────────────────────────────────────────────┐
 │ Agent Name                          🟢 |x| │ ← x is button to terminate the session only if running
@@ -235,6 +255,7 @@ tmux new-session -A -s {UUID} -c /home/user/project claude --session-id={UUID}
 ```
 
 **Header:**
+
 - Background: `#2d2d30`
 - Text color: `#cccccc`
 - Font size: `12px`
@@ -242,6 +263,7 @@ tmux new-session -A -s {UUID} -c /home/user/project claude --session-id={UUID}
 - Border bottom: `1px solid #3e3e42`
 
 **Status Indicators:**
+
 - 🟢 Green circle - tmux session running
 - 🔴 Red circle - tmux session terminated
 
@@ -249,7 +271,8 @@ tmux new-session -A -s {UUID} -c /home/user/project claude --session-id={UUID}
 
 ### Environment Variables
 
-**__HOME_DIR__** (compile-time)
+\***\*HOME_DIR\*\*** (compile-time)
+
 - Injected by Vite build
 - Used as default working directory
 - Defined in `vite.config.mts` and `vitest.config.mts`

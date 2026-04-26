@@ -5,12 +5,7 @@ declare const __HOME_DIR__: string;
 const API_BASE = "/api";
 
 interface AIAgentDialogProps {
-  onConfirm: (agent: {
-    id: string;
-    name: string;
-    sessionName: string;
-    workingDir: string;
-  }) => void;
+  onConfirm: (agent: { id: string; name: string; workingDir: string }) => void;
   onCancel: () => void;
 }
 
@@ -35,16 +30,18 @@ const AIAgentDialog: React.FC<AIAgentDialogProps> = ({
 
     setLoading(true);
     setError("");
+
     try {
-      const res = await fetch(`${API_BASE}/agents`, {
+      // Use browser's crypto.randomUUID()
+      const uuid = crypto.randomUUID();
+      const res = await fetch(`${API_BASE}/claude/${uuid}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, workingDir }),
+        body: JSON.stringify({ workingDir }),
       });
 
       if (res.ok) {
-        const agent = await res.json();
-        onConfirm(agent);
+        onConfirm({ id: uuid, name, workingDir });
       } else {
         setError("Failed to create agent");
       }
