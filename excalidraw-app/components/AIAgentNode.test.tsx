@@ -247,10 +247,10 @@ describe("AIAgentNode", () => {
     render(<AIAgentNode element={element} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Open in Kitty")).toBeDefined();
+      expect(screen.getByText("Open")).toBeDefined();
     });
 
-    const launchButton = screen.getByText("Open in Kitty");
+    const launchButton = screen.getByText("Open");
     fireEvent.click(launchButton);
 
     await waitFor(() => {

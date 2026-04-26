@@ -186,16 +186,17 @@ describe("Agent API", () => {
     });
   });
 
-  describe("Kitty Terminal Launch", () => {
-    it("should spawn kitty with tmux command chain", () => {
+  describe("Terminal Launch", () => {
+    it("should spawn terminal with tmux command chain", () => {
       (spawn as any).mockReturnValue({
         on: vi.fn(),
         unref: vi.fn(),
       });
 
-      // The actual implementation spawns kitty with sh -c and a compound command
+      // The actual implementation spawns $TERMINAL (or kitty) with sh -c and a compound command
+      const terminal = process.env.TERMINAL || "kitty";
       const proc = spawn(
-        "kitty",
+        terminal,
         ["sh", "-c", expect.stringContaining("tmux has-session")],
         {
           detached: true,
@@ -205,7 +206,7 @@ describe("Agent API", () => {
       proc.unref();
 
       expect(spawn).toHaveBeenCalledWith(
-        "kitty",
+        terminal,
         expect.arrayContaining(["sh", "-c"]),
         expect.objectContaining({
           detached: true,
@@ -215,12 +216,13 @@ describe("Agent API", () => {
 
     it("should handle launch errors", () => {
       (spawn as any).mockImplementation(() => {
-        throw new Error("kitty not found");
+        throw new Error("terminal not found");
       });
 
       let error = false;
       try {
-        spawn("kitty", ["sh", "-c", "tmux attach-session -t test-uuid"], {
+        const terminal = process.env.TERMINAL || "kitty";
+        spawn(terminal, ["sh", "-c", "tmux attach-session -t test-uuid"], {
           detached: true,
           stdio: "ignore",
         });

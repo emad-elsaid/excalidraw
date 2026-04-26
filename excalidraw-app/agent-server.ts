@@ -47,7 +47,7 @@ const terminateSession = (uuid: string): boolean => {
   }
 };
 
-const launchKitty = (uuid: string): boolean => {
+const launchTerminal = (uuid: string): boolean => {
   try {
     // Always use --resume since the session was already created via POST
     // The tmux command handles both cases:
@@ -55,21 +55,27 @@ const launchKitty = (uuid: string): boolean => {
     // - If tmux session doesn't exist: create it with claude --resume
     const tmuxCommand = `tmux has-session -t "${uuid}" 2>/dev/null || tmux new-session -d -s "${uuid}" "claude --resume=${uuid}"; tmux attach-session -t "${uuid}"`;
 
-    // Spawn kitty with the shell command
-    const proc = spawn("kitty", ["sh", "-c", tmuxCommand], {
+    // Use $TERMINAL environment variable, fallback to kitty
+    const terminal = process.env.TERMINAL || "kitty";
+
+    // Spawn terminal with the shell command
+    const proc = spawn(terminal, ["sh", "-c", tmuxCommand], {
       detached: true,
       stdio: "ignore",
       env: process.env,
     });
 
     proc.on("error", (err) => {
-      console.error(`[launchKitty] Spawn error:`, err);
+      console.error(`[launchTerminal] Spawn error:`, err);
     });
 
     proc.unref();
     return true;
   } catch (e) {
-    console.error("[launchKitty] Failed to launch kitty:", (e as any).message);
+    console.error(
+      "[launchTerminal] Failed to launch terminal:",
+      (e as any).message,
+    );
     return false;
   }
 };
@@ -151,15 +157,15 @@ export const agentApiPlugin = (): Plugin => {
         );
         if (launchMatch && req.method === "GET") {
           const uuid = launchMatch[1];
-          const success = launchKitty(uuid);
+          const success = launchTerminal(uuid);
 
           res.setHeader("Content-Type", "application/json");
           res.end(
             JSON.stringify({
               ok: success,
               message: success
-                ? "Opening kitty terminal..."
-                : "Failed to launch kitty",
+                ? "Opening terminal..."
+                : "Failed to launch terminal",
             }),
           );
           return;

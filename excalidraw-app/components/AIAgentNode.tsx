@@ -161,7 +161,7 @@ const AIAgentNode: React.FC<AIAgentNodeProps> = ({ element }) => {
               fontFamily: "system-ui",
             }}
           >
-            Open in Kitty
+            Open
           </button>
         </div>
       </div>
