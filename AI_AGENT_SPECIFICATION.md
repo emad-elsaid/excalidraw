@@ -9,32 +9,20 @@ The AI Agent component allows users to create and manage Claude Code instances d
 ### Components
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│ Excalidraw Canvas                                          │
-│                                                            │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │ AIAgentNode (Embeddable Element)                     │  │
-│  │  ┌────────────────────────────────────────────────┐  │  │
-│  │  │ Header: Agent Name                         🟢  │  │  │
-│  │  ├────────────────────────────────────────────────┤  │  │
-│  │  │                                                │  │  │
-│  │  │  <iframe src="http://localhost:7681">          │  │  │
-│  │  │    ┌──────────────────────────────────────┐    │  │  │
-│  │  │    │ ttyd Web Terminal                    │    │  │  │
-│  │  │    │  ┌────────────────────────────────┐  │    │  │  │
-│  │  │    │  │ tmux session: excalidraw-xxx   │  │    │  │  │
-│  │  │    │  │                                │  │    │  │  │
-│  │  │    │  │ $ claude                       │  │    │  │  │
-│  │  │    │  │ > How can I help?              │  │    │  │  │
-│  │  │    │  │                                │  │    │  │  │
-│  │  │    │  └────────────────────────────────┘  │    │  │  │
-│  │  │    └──────────────────────────────────────┘    │  │  │
-│  │  │  </iframe>                                     │  │  │
-│  │  │                                                │  │  │
-│  │  └────────────────────────────────────────────────┘  │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                                                            │
-└────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│ Excalidraw Canvas                                              │
+│                                                                │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │ AIAgentNode (Embeddable Element)                         │  │
+│  │  ┌────────────────────────────────────────────────────┐  │  │
+│  │  │ [Claude icon] [loading spinner] Header: Agent Name │  │  │
+│  │  ├────────────────────────────────────────────────────┤  │  │
+│  │  │  Workdir: ~/path/to/director                       │  │  │
+│  │  │  [Open] [Terminate]                                │  │  │
+│  │  └────────────────────────────────────────────────────┘  │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
 ```
 
 ### Backend Stack
@@ -63,7 +51,10 @@ The AI Agent component allows users to create and manage Claude Code instances d
 1. **AIAgentDialog** (`AIAgentDialog.tsx`)
 
    - Modal for creating new agents
-   - Inputs: Agent Name, Working Directory
+   - Inputs:
+     - Agent Name using text input
+     - Working directory: User choose using text input
+     - Worktree (boolean): checkbox specifying if claude should use --worktree flag
    - Calls `POST /api/claude/uuid` to create agent
 
 2. **AIAgentComponents** (`AIAgentComponents.tsx`)
@@ -87,7 +78,7 @@ The AI Agent component allows users to create and manage Claude Code instances d
 ### Creating an Agent
 
 ```
-User clicks toolbar button
+User clicks toolbar button showing Claude icon
          ↓
 actionCreateAIAgent triggers
          ↓
@@ -97,7 +88,7 @@ AIAgentComponents shows AIAgentDialog
          ↓
 User enters name + working directory
          ↓
-POST /api/claude/{newUUID}  { name, workingDir }
+POST /api/claude/{newUUID}  { name, workingDir, worktree }
          ↓
 Server creates agent record:
   {
@@ -105,6 +96,7 @@ Server creates agent record:
     name: "Agent Name",
     sessionName: "{uuid}",
     workingDir: "/path",
+    worktree: true,
     createdAt: "ISO-timestamp"
   }
          ↓
@@ -128,7 +120,7 @@ Every 3 seconds:
          ↓
   Returns: { status: "running" | "terminated" }
          ↓
-  Component updates indicator: 🟢 (running) or 🔴 (terminated)
+  Component updates indicator: [loading spinner] (running) or 🔴 (terminated)
 ```
 
 ## API Endpoints
@@ -162,7 +154,7 @@ Creates a new agent.
 
 **Behavior:**
 
-- Spawns: `tmux new -A -t {UUID} -c {workingDir} claude --session-id={UUID}`
+- Spawns: `tmux new -A -t {UUID} -c {workingDir} claude --session-id={UUID} --worktree`
 - Process is detached
 
 ### GET /api/claude/{uuid}
@@ -223,7 +215,7 @@ Opens the agent's terminal in external Kitty terminal that has tmux session with
 **Session Command:**
 
 ```bash
-tmux new-session -A -s {UUID} -c /home/user/project claude --session-id={UUID}
+tmux new-session -A -s {UUID} -c /home/user/project claude --session-id={UUID} --worktree
 ```
 
 **Flags:**
@@ -247,10 +239,11 @@ tmux new-session -A -s {UUID} -c /home/user/project claude --session-id={UUID}
 
 ```
 ┌────────────────────────────────────────────┐
-│ Agent Name                          🟢 |x| │ ← x is button to terminate the session only if running
+│ [claude icon] [loading spinner] Agent Name │
 ├────────────────────────────────────────────┤
 │ Directory: ~/code/excalidraw/              │
-| UUID: 9304b805-0c26-4e86-838d-0143f08524b1 |
+| [Open] [Terminate]                         | ← Open is a button to open terminal with the tmux session
+|                                            | ← Terminate a button to terminate the tmux session
 └────────────────────────────────────────────┘
 ```
 
@@ -264,7 +257,7 @@ tmux new-session -A -s {UUID} -c /home/user/project claude --session-id={UUID}
 
 **Status Indicators:**
 
-- 🟢 Green circle - tmux session running
+- Loading spinner - tmux session running
 - 🔴 Red circle - tmux session terminated
 
 ## Configuration

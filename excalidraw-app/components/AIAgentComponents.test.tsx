@@ -10,7 +10,16 @@ import { AIAgentComponents } from "./AIAgentComponents";
 vi.mock("./AIAgentDialog", () => ({
   default: ({ onConfirm, onCancel }: any) => (
     <div data-testid="mock-dialog">
-      <button onClick={() => onConfirm({ id: "test-123", name: "Test" })}>
+      <button
+        onClick={() =>
+          onConfirm({
+            id: "test-123",
+            name: "Test",
+            workingDir: "/home/user",
+            worktree: false,
+          })
+        }
+      >
         Confirm
       </button>
       <button onClick={onCancel}>Cancel</button>
@@ -76,6 +85,8 @@ describe("AIAgentComponents", () => {
               nodeType: "ai-agent",
               agentId: "test-123",
               name: "Test",
+              workingDir: "/home/user",
+              worktree: false,
             }),
           }),
         ]),

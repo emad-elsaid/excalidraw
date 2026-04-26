@@ -5,7 +5,12 @@ declare const __HOME_DIR__: string;
 const API_BASE = "/api";
 
 interface AIAgentDialogProps {
-  onConfirm: (agent: { id: string; name: string; workingDir: string }) => void;
+  onConfirm: (agent: {
+    id: string;
+    name: string;
+    workingDir: string;
+    worktree: boolean;
+  }) => void;
   onCancel: () => void;
 }
 
@@ -15,6 +20,7 @@ const AIAgentDialog: React.FC<AIAgentDialogProps> = ({
 }) => {
   const [name, setName] = useState("Claude Code");
   const [workingDir, setWorkingDir] = useState(__HOME_DIR__);
+  const [worktree, setWorktree] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -37,11 +43,11 @@ const AIAgentDialog: React.FC<AIAgentDialogProps> = ({
       const res = await fetch(`${API_BASE}/claude/${uuid}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workingDir }),
+        body: JSON.stringify({ workingDir, worktree }),
       });
 
       if (res.ok) {
-        onConfirm({ id: uuid, name, workingDir });
+        onConfirm({ id: uuid, name, workingDir, worktree });
       } else {
         setError("Failed to create agent");
       }
@@ -144,6 +150,31 @@ const AIAgentDialog: React.FC<AIAgentDialogProps> = ({
               boxSizing: "border-box",
             }}
           />
+        </div>
+
+        <div style={{ marginBottom: "16px" }}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              fontSize: "12px",
+              color: "#9ca3af",
+              cursor: "pointer",
+              gap: "8px",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={worktree}
+              onChange={(e) => setWorktree(e.target.checked)}
+              style={{
+                width: "14px",
+                height: "14px",
+                cursor: "pointer",
+              }}
+            />
+            <span>Use worktree (isolate session in git worktree)</span>
+          </label>
         </div>
 
         {error && (

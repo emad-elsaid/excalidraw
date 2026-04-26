@@ -21,6 +21,7 @@ export const AIAgentComponents = ({
     id: string;
     name: string;
     workingDir: string;
+    worktree: boolean;
   }) => {
     const elements = excalidrawAPI.getSceneElements();
     const lastElement = elements[elements.length - 1];
@@ -44,6 +45,7 @@ export const AIAgentComponents = ({
         agentId: agent.id,
         name: agent.name,
         workingDir: agent.workingDir,
+        worktree: agent.worktree,
       },
     } as any);
 

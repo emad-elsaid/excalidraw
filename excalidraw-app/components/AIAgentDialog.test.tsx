@@ -35,6 +35,9 @@ describe("AIAgentDialog", () => {
     expect(screen.getByText("Create AI Agent Node")).toBeDefined();
     expect(screen.getByLabelText("Agent Name")).toBeDefined();
     expect(screen.getByLabelText("Working Directory")).toBeDefined();
+    expect(
+      screen.getByText("Use worktree (isolate session in git worktree)"),
+    ).toBeDefined();
     expect(screen.getByText("Create Node")).toBeDefined();
     expect(screen.getByText("Cancel")).toBeDefined();
   });
@@ -57,6 +60,19 @@ describe("AIAgentDialog", () => {
     fireEvent.change(dirInput, { target: { value: "/custom/path" } });
 
     expect(dirInput.value).toBe("/custom/path");
+  });
+
+  it("should toggle worktree checkbox", () => {
+    render(<AIAgentDialog onConfirm={mockOnConfirm} onCancel={mockOnCancel} />);
+
+    const checkbox = screen.getByRole("checkbox") as HTMLInputElement;
+    expect(checkbox.checked).toBe(false);
+
+    fireEvent.click(checkbox);
+    expect(checkbox.checked).toBe(true);
+
+    fireEvent.click(checkbox);
+    expect(checkbox.checked).toBe(false);
   });
 
   it("should show error when name is empty", async () => {
@@ -130,6 +146,7 @@ describe("AIAgentDialog", () => {
         id: "0ce062db-8ef0-4d98-930d-04389b6c81fa",
         name: "Test Agent",
         workingDir: "/home/user",
+        worktree: false,
       });
     });
 
@@ -138,7 +155,7 @@ describe("AIAgentDialog", () => {
       expect.objectContaining({
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workingDir: "/home/user" }),
+        body: JSON.stringify({ workingDir: "/home/user", worktree: false }),
       }),
     );
   });
@@ -160,6 +177,52 @@ describe("AIAgentDialog", () => {
     await waitFor(() => {
       expect(mockRandomUUID).toHaveBeenCalled();
     });
+  });
+
+  it("should create agent with worktree enabled", async () => {
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: "0ce062db-8ef0-4d98-930d-04389b6c81fa",
+        createdAt: new Date().toISOString(),
+      }),
+    });
+
+    render(<AIAgentDialog onConfirm={mockOnConfirm} onCancel={mockOnCancel} />);
+
+    const nameInput = screen.getByLabelText("Agent Name") as HTMLInputElement;
+    const dirInput = screen.getByLabelText(
+      "Working Directory",
+    ) as HTMLInputElement;
+    const checkbox = screen.getByRole("checkbox") as HTMLInputElement;
+
+    fireEvent.change(nameInput, { target: { value: "Worktree Agent" } });
+    fireEvent.change(dirInput, { target: { value: "/home/user/project" } });
+    fireEvent.click(checkbox);
+
+    const createButton = screen.getByText("Create Node");
+    fireEvent.click(createButton);
+
+    await waitFor(() => {
+      expect(mockOnConfirm).toHaveBeenCalledWith({
+        id: "0ce062db-8ef0-4d98-930d-04389b6c81fa",
+        name: "Worktree Agent",
+        workingDir: "/home/user/project",
+        worktree: true,
+      });
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/claude/0ce062db-8ef0-4d98-930d-04389b6c81fa",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workingDir: "/home/user/project",
+          worktree: true,
+        }),
+      }),
+    );
   });
 
   it("should show error when API request fails", async () => {

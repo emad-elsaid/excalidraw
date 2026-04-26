@@ -16,23 +16,29 @@ const sessionExists = (uuid: string): boolean => {
   }
 };
 
-const startSession = (uuid: string, workingDir: string) => {
+const startSession = (
+  uuid: string,
+  workingDir: string,
+  worktree: boolean = false,
+) => {
   try {
-    spawn(
-      "tmux",
-      [
-        "new-session",
-        "-d",
-        "-A",
-        "-s",
-        uuid,
-        "-c",
-        workingDir,
-        "claude",
-        `--session-id=${uuid}`,
-      ],
-      { detached: true, stdio: "ignore" },
-    );
+    const args = [
+      "new-session",
+      "-d",
+      "-A",
+      "-s",
+      uuid,
+      "-c",
+      workingDir,
+      "claude",
+      `--session-id=${uuid}`,
+    ];
+
+    if (worktree) {
+      args.push("--worktree");
+    }
+
+    spawn("tmux", args, { detached: true, stdio: "ignore" });
   } catch (e) {
     console.error("Failed to start tmux session:", (e as any).message);
   }
@@ -112,10 +118,12 @@ export const agentApiPlugin = (): Plugin => {
 
           req.on("end", () => {
             try {
-              const { workingDir = process.env.HOME || "/home" } =
-                JSON.parse(body);
+              const {
+                workingDir = process.env.HOME || "/home",
+                worktree = false,
+              } = JSON.parse(body);
 
-              startSession(uuid, workingDir);
+              startSession(uuid, workingDir, worktree);
 
               res.setHeader("Content-Type", "application/json");
               res.end(

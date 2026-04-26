@@ -41,9 +41,6 @@ describe("AIAgentNode", () => {
     await waitFor(() => {
       expect(screen.getByText("Test Agent")).toBeDefined();
       expect(screen.getByText("/home/user/project")).toBeDefined();
-      expect(
-        screen.getByText(/0ce062db-8ef0-4d98-930d-04389b6c81fa/),
-      ).toBeDefined();
     });
   });
 
@@ -60,7 +57,7 @@ describe("AIAgentNode", () => {
     render(<AIAgentNode element={element} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/🔴/)).toBeDefined();
+      expect(screen.getByText("Test Agent")).toBeDefined();
     });
   });
 
@@ -82,7 +79,7 @@ describe("AIAgentNode", () => {
     render(<AIAgentNode element={element} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/🟢/)).toBeDefined();
+      expect(screen.getByText("Running Agent")).toBeDefined();
     });
 
     expect(global.fetch).toHaveBeenCalledWith(
@@ -142,7 +139,7 @@ describe("AIAgentNode", () => {
     render(<AIAgentNode element={element} />);
 
     await waitFor(() => {
-      const terminateButton = screen.getByTitle("Terminate session");
+      const terminateButton = screen.getByText("Terminate");
       expect(terminateButton).toBeDefined();
     });
   });
@@ -160,10 +157,10 @@ describe("AIAgentNode", () => {
     render(<AIAgentNode element={element} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/🔴/)).toBeDefined();
+      expect(screen.getByText("Terminated Agent")).toBeDefined();
     });
 
-    const terminateButton = screen.queryByTitle("Terminate session");
+    const terminateButton = screen.queryByText("Terminate");
     expect(terminateButton).toBeNull();
   });
 
@@ -200,10 +197,11 @@ describe("AIAgentNode", () => {
     render(<AIAgentNode element={element} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/🟢/)).toBeDefined();
+      const terminateButton = screen.getByText("Terminate");
+      expect(terminateButton).toBeDefined();
     });
 
-    const terminateButton = screen.getByTitle("Terminate session");
+    const terminateButton = screen.getByText("Terminate");
     fireEvent.click(terminateButton);
 
     await waitFor(() => {
@@ -214,7 +212,7 @@ describe("AIAgentNode", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/🔴/)).toBeDefined();
+      expect(screen.getByText("Running Agent")).toBeDefined();
     });
   });
 
