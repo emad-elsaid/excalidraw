@@ -107,6 +107,8 @@ import {
   exportToExcalidrawPlus,
 } from "./components/ExportToExcalidrawPlus";
 import { TopErrorBoundary } from "./components/TopErrorBoundary";
+import { AIAgentComponents } from "./components/AIAgentComponents";
+import AIAgentNode from "./components/AIAgentNode";
 
 import {
   exportToBackend,
@@ -419,6 +421,7 @@ const ExcalidrawWrapper = () => {
   });
 
   const [, forceRefresh] = useState(false);
+  const [showAIAgentDialog, setShowAIAgentDialog] = useState(false);
 
   useEffect(() => {
     if (isDevEnv()) {
@@ -680,6 +683,11 @@ const ExcalidrawWrapper = () => {
     appState: AppState,
     files: BinaryFiles,
   ) => {
+    if (appState.openDialog?.name === "createAIAgent") {
+      setShowAIAgentDialog(true);
+      excalidrawAPI?.updateScene({ appState: { openDialog: null } });
+    }
+
     if (collabAPI?.isCollaborating()) {
       collabAPI.syncElements(elements);
     }
@@ -952,6 +960,14 @@ const ExcalidrawWrapper = () => {
         handleKeyboardGlobally={true}
         autoFocus={true}
         theme={editorTheme}
+        validateEmbeddable={() => true}
+        renderEmbeddable={(element) => {
+          const customData = (element as any).customData;
+          if (customData?.nodeType === "ai-agent") {
+            return <AIAgentNode element={element} />;
+          }
+          return null;
+        }}
         renderTopRightUI={(isMobile) => {
           if (isMobile || !collabAPI || isCollabDisabled) {
             return null;
@@ -1262,6 +1278,13 @@ const ExcalidrawWrapper = () => {
           />
         )}
       </Excalidraw>
+      {excalidrawAPI && (
+        <AIAgentComponents
+          excalidrawAPI={excalidrawAPI}
+          showDialog={showAIAgentDialog}
+          onCloseDialog={() => setShowAIAgentDialog(false)}
+        />
+      )}
     </div>
   );
 };

@@ -504,6 +504,14 @@ export const embeddableURLValidator = (
   validateEmbeddable: ExcalidrawProps["validateEmbeddable"],
 ): boolean => {
   if (!url) {
+    if (typeof validateEmbeddable === "function") {
+      const ret = validateEmbeddable("");
+      if (ret === true) {
+        return true;
+      }
+    } else if (validateEmbeddable === true) {
+      return true;
+    }
     return false;
   }
   if (validateEmbeddable != null) {

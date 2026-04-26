@@ -3,6 +3,9 @@ import path from "path";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  define: {
+    __HOME_DIR__: JSON.stringify(process.env.HOME || "/home"),
+  },
   resolve: {
     alias: [
       {

@@ -364,6 +364,8 @@ const LayerUI = ({
                               UIOptions={UIOptions}
                               app={app}
                             />
+                            <div className="App-toolbar__divider" />
+                            {actionManager.renderAction("createAIAgent")}
                           </Stack.Row>
                         </Island>
                         {isCollaborating && (

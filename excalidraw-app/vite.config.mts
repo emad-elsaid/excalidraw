@@ -8,11 +8,15 @@ import checker from "vite-plugin-checker";
 import { createHtmlPlugin } from "vite-plugin-html";
 import Sitemap from "vite-plugin-sitemap";
 import { woff2BrowserPlugin } from "../scripts/woff2/woff2-vite-plugins";
+import { agentApiPlugin } from "./agent-server";
 export default defineConfig(({ mode }) => {
   // To load .env variables
   const envVars = loadEnv(mode, `../`);
   // https://vitejs.dev/config/
   return {
+    define: {
+      __HOME_DIR__: JSON.stringify(process.env.HOME || "/home"),
+    },
     server: {
       port: Number(envVars.VITE_APP_PORT || 3000),
       // open the browser
@@ -302,6 +306,7 @@ export default defineConfig(({ mode }) => {
           ],
         },
       }),
+      agentApiPlugin(),
       createHtmlPlugin({
         minify: true,
       }),
