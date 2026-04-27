@@ -25,6 +25,14 @@ The AI Agent component allows users to create and manage Claude Code instances d
 └────────────────────────────────────────────────────────────────┘
 ```
 
+### Color scheme
+- #c15f3c
+- #ffffff
+- #f4f3ee
+- #b1ada1
+
+
+
 ### Backend Stack
 
 1. **Vite Plugin** (`agent-server.ts`)
@@ -55,6 +63,7 @@ The AI Agent component allows users to create and manage Claude Code instances d
      - Agent Name using text input
      - Working directory: User choose using text input
      - Worktree (boolean): checkbox specifying if claude should use --worktree flag
+     - dangerously skip permissions (boolean): checkbox specifying if claude should start with `--dangerously-skip-permissions` flag
    - Calls `POST /api/claude/uuid` to create agent
 
 2. **AIAgentComponents** (`AIAgentComponents.tsx`)
@@ -64,7 +73,6 @@ The AI Agent component allows users to create and manage Claude Code instances d
    - Manages dialog visibility
 
 3. **AIAgentNode** (`AIAgentNode.tsx`)
-
    - Renders inside embeddable element
    - Displays status indicator, agent name, working directory, UUID of the session. button to terminate if it's running. button to open the kitty terminal calling `GET /api/claude/uuid/launch`
    - Polls status every 3 seconds
@@ -249,11 +257,7 @@ tmux new-session -A -s {UUID} -c /home/user/project claude --session-id={UUID} -
 
 **Header:**
 
-- Background: `#2d2d30`
-- Text color: `#cccccc`
-- Font size: `12px`
-- Padding: `4px 8px`
-- Border bottom: `1px solid #3e3e42`
+Use the color scheme
 
 **Status Indicators:**
 

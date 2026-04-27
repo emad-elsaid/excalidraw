@@ -22,6 +22,7 @@ export const AIAgentComponents = ({
     name: string;
     workingDir: string;
     worktree: boolean;
+    dangerouslySkipPermissions: boolean;
   }) => {
     const elements = excalidrawAPI.getSceneElements();
     const lastElement = elements[elements.length - 1];
@@ -46,6 +47,7 @@ export const AIAgentComponents = ({
         name: agent.name,
         workingDir: agent.workingDir,
         worktree: agent.worktree,
+        dangerouslySkipPermissions: agent.dangerouslySkipPermissions,
       },
     } as any);
 

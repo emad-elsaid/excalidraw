@@ -10,6 +10,7 @@ interface AIAgentDialogProps {
     name: string;
     workingDir: string;
     worktree: boolean;
+    dangerouslySkipPermissions: boolean;
   }) => void;
   onCancel: () => void;
 }
@@ -21,6 +22,8 @@ const AIAgentDialog: React.FC<AIAgentDialogProps> = ({
   const [name, setName] = useState("Claude Code");
   const [workingDir, setWorkingDir] = useState(__HOME_DIR__);
   const [worktree, setWorktree] = useState(false);
+  const [dangerouslySkipPermissions, setDangerouslySkipPermissions] =
+    useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -43,11 +46,11 @@ const AIAgentDialog: React.FC<AIAgentDialogProps> = ({
       const res = await fetch(`${API_BASE}/claude/${uuid}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workingDir, worktree }),
+        body: JSON.stringify({ workingDir, worktree, dangerouslySkipPermissions }),
       });
 
       if (res.ok) {
-        onConfirm({ id: uuid, name, workingDir, worktree });
+        onConfirm({ id: uuid, name, workingDir, worktree, dangerouslySkipPermissions });
       } else {
         setError("Failed to create agent");
       }
@@ -72,166 +75,190 @@ const AIAgentDialog: React.FC<AIAgentDialogProps> = ({
     >
       <div
         style={{
-          backgroundColor: "#1f2937",
+          backgroundColor: "#f4f3ee",
           borderRadius: "8px",
-          padding: "24px",
+          padding: "0",
           maxWidth: "400px",
           width: "90%",
-          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
-          color: "#e5e7eb",
+          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.15)",
+          color: "#c15f3c",
           fontFamily: "system-ui",
+          overflow: "hidden",
         }}
       >
-        <h2 style={{ marginTop: 0, marginBottom: "16px", fontSize: "18px" }}>
-          Create AI Agent Node
-        </h2>
-
-        <div style={{ marginBottom: "16px" }}>
-          <label
-            htmlFor="agent-name-input"
-            style={{
-              display: "block",
-              fontSize: "12px",
-              marginBottom: "6px",
-              color: "#9ca3af",
-              fontWeight: 500,
-            }}
-          >
-            Agent Name
-          </label>
-          <input
-            id="agent-name-input"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., Claude Code"
-            style={{
-              width: "100%",
-              padding: "8px",
-              backgroundColor: "#374151",
-              border: "1px solid #4b5563",
-              borderRadius: "4px",
-              color: "#e5e7eb",
-              fontFamily: "monospace",
-              fontSize: "12px",
-              boxSizing: "border-box",
-            }}
-          />
-        </div>
-
-        <div style={{ marginBottom: "16px" }}>
-          <label
-            htmlFor="working-dir-input"
-            style={{
-              display: "block",
-              fontSize: "12px",
-              marginBottom: "6px",
-              color: "#9ca3af",
-              fontWeight: 500,
-            }}
-          >
-            Working Directory
-          </label>
-          <input
-            id="working-dir-input"
-            type="text"
-            value={workingDir}
-            onChange={(e) => setWorkingDir(e.target.value)}
-            placeholder="/path/to/project"
-            style={{
-              width: "100%",
-              padding: "8px",
-              backgroundColor: "#374151",
-              border: "1px solid #4b5563",
-              borderRadius: "4px",
-              color: "#e5e7eb",
-              fontFamily: "monospace",
-              fontSize: "12px",
-              boxSizing: "border-box",
-            }}
-          />
-        </div>
-
-        <div style={{ marginBottom: "16px" }}>
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              fontSize: "12px",
-              color: "#9ca3af",
-              cursor: "pointer",
-              gap: "8px",
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={worktree}
-              onChange={(e) => setWorktree(e.target.checked)}
-              style={{
-                width: "14px",
-                height: "14px",
-                cursor: "pointer",
-              }}
-            />
-            <span>Use worktree (isolate session in git worktree)</span>
-          </label>
-        </div>
-
-        {error && (
-          <div
-            style={{
-              marginBottom: "16px",
-              padding: "8px",
-              backgroundColor: "#7f1d1d",
-              border: "1px solid #dc2626",
-              borderRadius: "4px",
-              fontSize: "12px",
-              color: "#fecaca",
-            }}
-          >
-            {error}
-          </div>
-        )}
-
         <div
           style={{
-            display: "flex",
-            gap: "8px",
-            justifyContent: "flex-end",
+            backgroundColor: "#c15f3c",
+            padding: "16px 24px",
+            color: "#ffffff",
           }}
         >
-          <button
-            onClick={onCancel}
-            disabled={loading}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "#4b5563",
-              color: "#e5e7eb",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "12px",
-              opacity: loading ? 0.6 : 1,
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleConfirm}
-            disabled={loading}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "#3b82f6",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "12px",
-              opacity: loading ? 0.6 : 1,
-            }}
-          >
-            {loading ? "Creating..." : "Create Node"}
-          </button>
+          <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 600 }}>
+            Create AI Agent Node
+          </h2>
+        </div>
+
+        <div style={{ padding: "24px" }}>
+          <div style={{ marginBottom: "16px" }}>
+            <label
+              htmlFor="agent-name-input"
+              style={{
+                display: "block",
+                fontSize: "12px",
+                marginBottom: "6px",
+                color: "#b1ada1",
+                fontWeight: 500,
+              }}
+            >
+              Agent Name
+            </label>
+            <input
+              id="agent-name-input"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Claude Code"
+              style={{
+                width: "100%",
+                padding: "8px",
+                backgroundColor: "#ffffff",
+                border: "1px solid #b1ada1",
+                borderRadius: "4px",
+                color: "#c15f3c",
+                fontFamily: "monospace",
+                fontSize: "12px",
+                boxSizing: "border-box",
+                outline: "none",
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: "16px" }}>
+            <label
+              htmlFor="working-dir-input"
+              style={{
+                display: "block",
+                fontSize: "12px",
+                marginBottom: "6px",
+                color: "#b1ada1",
+                fontWeight: 500,
+              }}
+            >
+              Working Directory
+            </label>
+            <input
+              id="working-dir-input"
+              type="text"
+              value={workingDir}
+              onChange={(e) => setWorkingDir(e.target.value)}
+              placeholder="/path/to/project"
+              style={{
+                width: "100%",
+                padding: "8px",
+                backgroundColor: "#ffffff",
+                border: "1px solid #b1ada1",
+                borderRadius: "4px",
+                color: "#c15f3c",
+                fontFamily: "monospace",
+                fontSize: "12px",
+                boxSizing: "border-box",
+                outline: "none",
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: "16px" }}>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                fontSize: "12px",
+                color: "#b1ada1",
+                cursor: "pointer",
+                gap: "8px",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={worktree}
+                onChange={(e) => setWorktree(e.target.checked)}
+                style={{ width: "14px", height: "14px", cursor: "pointer", accentColor: "#c15f3c" }}
+              />
+              <span>Use worktree (isolate session in git worktree)</span>
+            </label>
+          </div>
+
+          <div style={{ marginBottom: "16px" }}>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                fontSize: "12px",
+                color: "#b1ada1",
+                cursor: "pointer",
+                gap: "8px",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={dangerouslySkipPermissions}
+                onChange={(e) => setDangerouslySkipPermissions(e.target.checked)}
+                style={{ width: "14px", height: "14px", cursor: "pointer", accentColor: "#c15f3c" }}
+              />
+              <span>Dangerously skip permissions</span>
+            </label>
+          </div>
+
+          {error && (
+            <div
+              style={{
+                marginBottom: "16px",
+                padding: "8px",
+                backgroundColor: "#fff0ed",
+                border: "1px solid #c15f3c",
+                borderRadius: "4px",
+                fontSize: "12px",
+                color: "#c15f3c",
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+            <button
+              onClick={onCancel}
+              disabled={loading}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: "#ffffff",
+                color: "#b1ada1",
+                border: "1px solid #b1ada1",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "12px",
+                opacity: loading ? 0.6 : 1,
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirm}
+              disabled={loading}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: "#c15f3c",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "12px",
+                opacity: loading ? 0.6 : 1,
+              }}
+            >
+              {loading ? "Creating..." : "Create Node"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

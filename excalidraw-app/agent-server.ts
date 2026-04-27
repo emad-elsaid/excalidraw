@@ -20,6 +20,7 @@ const startSession = (
   uuid: string,
   workingDir: string,
   worktree: boolean = false,
+  dangerouslySkipPermissions: boolean = false,
 ) => {
   try {
     const args = [
@@ -36,6 +37,10 @@ const startSession = (
 
     if (worktree) {
       args.push("--worktree");
+    }
+
+    if (dangerouslySkipPermissions) {
+      args.push("--dangerously-skip-permissions");
     }
 
     spawn("tmux", args, { detached: true, stdio: "ignore" });
@@ -59,7 +64,7 @@ const launchTerminal = (uuid: string): boolean => {
     // The tmux command handles both cases:
     // - If tmux session exists: just attach
     // - If tmux session doesn't exist: create it with claude --resume
-    const tmuxCommand = `tmux has-session -t "${uuid}" 2>/dev/null || tmux new-session -d -s "${uuid}" "claude --resume=${uuid}"; tmux attach-session -t "${uuid}"`;
+    const tmuxCommand = `tmux has-session -t "${uuid}" 2>/dev/null || tmux new-session -d -s "${uuid}" "claude --resume=${uuid};sh"; tmux attach-session -t "${uuid}"`;
 
     // Use $TERMINAL environment variable, fallback to kitty
     const terminal = process.env.TERMINAL || "kitty";
@@ -121,9 +126,10 @@ export const agentApiPlugin = (): Plugin => {
               const {
                 workingDir = process.env.HOME || "/home",
                 worktree = false,
+                dangerouslySkipPermissions = false,
               } = JSON.parse(body);
 
-              startSession(uuid, workingDir, worktree);
+              startSession(uuid, workingDir, worktree, dangerouslySkipPermissions);
 
               res.setHeader("Content-Type", "application/json");
               res.end(
