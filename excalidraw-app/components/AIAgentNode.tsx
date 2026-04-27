@@ -8,8 +8,8 @@ interface AIAgentNodeProps {
 
 const AIAgentNode: React.FC<AIAgentNodeProps> = ({ element }) => {
   const [status, setStatus] = useState<"running" | "terminated">("terminated");
+  const [windowName, setWindowName] = useState<string>("");
   const agentId = element.customData?.agentId;
-  const agentName = element.customData?.name || "Agent";
   const workingDir = element.customData?.workingDir || "~";
 
   useEffect(() => {
@@ -23,6 +23,7 @@ const AIAgentNode: React.FC<AIAgentNodeProps> = ({ element }) => {
         if (res.ok) {
           const data = await res.json();
           setStatus(data.status);
+          setWindowName(data.name || "");
         }
       } catch (err) {
         console.error("Failed to fetch agent status:", err);
@@ -147,7 +148,7 @@ const AIAgentNode: React.FC<AIAgentNodeProps> = ({ element }) => {
           ) : (
             <span style={{ color: "#f4f3ee", fontSize: "14px" }}>●</span>
           )}
-          <span style={{ fontWeight: 500, color: "#ffffff" }}>{agentName}</span>
+          <span style={{ fontWeight: 500, color: "#ffffff" }}>{windowName || agentId}</span>
         </div>
       </div>
 

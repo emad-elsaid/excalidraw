@@ -7,7 +7,6 @@ const API_BASE = "/api";
 interface AIAgentDialogProps {
   onConfirm: (agent: {
     id: string;
-    name: string;
     workingDir: string;
     worktree: boolean;
     dangerouslySkipPermissions: boolean;
@@ -19,7 +18,6 @@ const AIAgentDialog: React.FC<AIAgentDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  const [name, setName] = useState("Claude Code");
   const [workingDir, setWorkingDir] = useState(__HOME_DIR__);
   const [worktree, setWorktree] = useState(false);
   const [dangerouslySkipPermissions, setDangerouslySkipPermissions] =
@@ -28,10 +26,6 @@ const AIAgentDialog: React.FC<AIAgentDialogProps> = ({
   const [error, setError] = useState("");
 
   const handleConfirm = async () => {
-    if (!name.trim()) {
-      setError("Agent name is required");
-      return;
-    }
     if (!workingDir.trim()) {
       setError("Working directory is required");
       return;
@@ -50,7 +44,7 @@ const AIAgentDialog: React.FC<AIAgentDialogProps> = ({
       });
 
       if (res.ok) {
-        onConfirm({ id: uuid, name, workingDir, worktree, dangerouslySkipPermissions });
+        onConfirm({ id: uuid, workingDir, worktree, dangerouslySkipPermissions });
       } else {
         setError("Failed to create agent");
       }
@@ -101,40 +95,6 @@ const AIAgentDialog: React.FC<AIAgentDialogProps> = ({
         <div style={{ padding: "24px" }}>
           <div style={{ marginBottom: "16px" }}>
             <label
-              htmlFor="agent-name-input"
-              style={{
-                display: "block",
-                fontSize: "12px",
-                marginBottom: "6px",
-                color: "#b1ada1",
-                fontWeight: 500,
-              }}
-            >
-              Agent Name
-            </label>
-            <input
-              id="agent-name-input"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Claude Code"
-              style={{
-                width: "100%",
-                padding: "8px",
-                backgroundColor: "#ffffff",
-                border: "1px solid #b1ada1",
-                borderRadius: "4px",
-                color: "#c15f3c",
-                fontFamily: "monospace",
-                fontSize: "12px",
-                boxSizing: "border-box",
-                outline: "none",
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: "16px" }}>
-            <label
               htmlFor="working-dir-input"
               style={{
                 display: "block",
@@ -149,6 +109,7 @@ const AIAgentDialog: React.FC<AIAgentDialogProps> = ({
             <input
               id="working-dir-input"
               type="text"
+              autoFocus
               value={workingDir}
               onChange={(e) => setWorkingDir(e.target.value)}
               placeholder="/path/to/project"

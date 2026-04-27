@@ -15,7 +15,7 @@ The AI Agent component allows users to create and manage Claude Code instances d
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │ AIAgentNode (Embeddable Element)                         │  │
 │  │  ┌────────────────────────────────────────────────────┐  │  │
-│  │  │ [Claude icon] [loading spinner] Header: Agent Name │  │  │
+│  │  │ [Claude icon] [loading spinner] Tmux window name   │  │  │
 │  │  ├────────────────────────────────────────────────────┤  │  │
 │  │  │  Workdir: ~/path/to/director                       │  │  │
 │  │  │  [Open] [Terminate]                                │  │  │
@@ -60,8 +60,7 @@ The AI Agent component allows users to create and manage Claude Code instances d
 
    - Modal for creating new agents
    - Inputs:
-     - Agent Name using text input
-     - Working directory: User choose using text input
+     - Working directory: User choose using text input, required
      - Worktree (boolean): checkbox specifying if claude should use --worktree flag
      - dangerously skip permissions (boolean): checkbox specifying if claude should start with `--dangerously-skip-permissions` flag
    - Calls `POST /api/claude/uuid` to create agent
@@ -96,7 +95,7 @@ AIAgentComponents shows AIAgentDialog
          ↓
 User enters name + working directory
          ↓
-POST /api/claude/{newUUID}  { name, workingDir, worktree }
+POST /api/claude/{newUUID}  { workingDir, worktree }
          ↓
 Server creates agent record:
   {
@@ -173,14 +172,17 @@ Returns the current status of an agent's tmux session.
 
 ```json
 {
-  "status": "running"
+  "status": "running",
+  "name": "tmux window name"
 }
 ```
 
 **Status Values:**
 
 - `"running"` - tmux session is active
-- `"terminated"` - tmux session does not exist
+- `"terminated"** - tmux session does not exist
+**Name:**
+- the tmux window name for this session using "tmux display-message -p -t <uuid>"
 
 ### DELETE /api/claude/{uuid}
 
@@ -246,13 +248,13 @@ tmux new-session -A -s {UUID} -c /home/user/project claude --session-id={UUID} -
 **Layout:**
 
 ```
-┌────────────────────────────────────────────┐
-│ [claude icon] [loading spinner] Agent Name │
-├────────────────────────────────────────────┤
-│ Directory: ~/code/excalidraw/              │
-| [Open] [Terminate]                         | ← Open is a button to open terminal with the tmux session
-|                                            | ← Terminate a button to terminate the tmux session
-└────────────────────────────────────────────┘
+┌───────────────────────────────────────────────┐
+│ [claude icon] [loading spinner] Tmux win name │
+├───────────────────────────────────────────────┤
+│ Directory: ~/code/excalidraw/                 │
+| [Open] [Terminate]                            | ← Open is a button to open terminal with the tmux session
+|                                               | ← Terminate a button to terminate the tmux session
+└───────────────────────────────────────────────┘
 ```
 
 **Header:**

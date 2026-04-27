@@ -19,7 +19,6 @@ export const AIAgentComponents = ({
 }: AIAgentComponentsProps) => {
   const handleCreateAgent = (agent: {
     id: string;
-    name: string;
     workingDir: string;
     worktree: boolean;
     dangerouslySkipPermissions: boolean;
@@ -44,7 +43,6 @@ export const AIAgentComponents = ({
       customData: {
         nodeType: "ai-agent",
         agentId: agent.id,
-        name: agent.name,
         workingDir: agent.workingDir,
         worktree: agent.worktree,
         dangerouslySkipPermissions: agent.dangerouslySkipPermissions,

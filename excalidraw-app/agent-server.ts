@@ -6,13 +6,21 @@ const sessionExists = (uuid: string): boolean => {
   try {
     const output = execSync(
       'tmux list-sessions -F "#{session_name}" 2>/dev/null',
-      {
-        encoding: "utf8",
-      },
+      { encoding: "utf8" },
     );
     return output.split("\n").includes(uuid);
   } catch {
     return false;
+  }
+};
+
+const sessionWindowName = (uuid: string): string => {
+  try {
+    return execSync(`tmux display-message -p -t ${uuid} '#{pane_title}' 2>/dev/null`, {
+      encoding: "utf8",
+    }).trim();
+  } catch {
+    return "";
   }
 };
 
@@ -64,13 +72,9 @@ const launchTerminal = (uuid: string): boolean => {
     // The tmux command handles both cases:
     // - If tmux session exists: just attach
     // - If tmux session doesn't exist: create it with claude --resume
-    const tmuxCommand = `tmux has-session -t "${uuid}" 2>/dev/null || tmux new-session -d -s "${uuid}" "claude --resume=${uuid};sh"; tmux attach-session -t "${uuid}"`;
-
-    // Use $TERMINAL environment variable, fallback to kitty
     const terminal = process.env.TERMINAL || "kitty";
 
-    // Spawn terminal with the shell command
-    const proc = spawn(terminal, ["sh", "-c", tmuxCommand], {
+    const proc = spawn(terminal, ["tmux", "attach-session", "-t", uuid], {
       detached: true,
       stdio: "ignore",
       env: process.env,
@@ -103,10 +107,11 @@ export const agentApiPlugin = (): Plugin => {
         if (getMatch && req.method === "GET") {
           const uuid = getMatch[1];
           const running = sessionExists(uuid);
+          const name = running ? sessionWindowName(uuid) : "";
 
           res.setHeader("Content-Type", "application/json");
           res.end(
-            JSON.stringify({ status: running ? "running" : "terminated" }),
+            JSON.stringify({ status: running ? "running" : "terminated", name }),
           );
           return;
         }
