@@ -23,7 +23,9 @@ const AIAgentNode: React.FC<AIAgentNodeProps> = ({ element }) => {
         if (res.ok) {
           const data = await res.json();
           setStatus(data.status);
-          setWindowName(data.name || "");
+          if (data.name) {
+            setWindowName(data.name);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch agent status:", err);
